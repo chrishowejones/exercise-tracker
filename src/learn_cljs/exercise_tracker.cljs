@@ -1,5 +1,6 @@
 (ns learn-cljs.exercise-tracker
   (:require
+   [cljs.reader :refer [read-string]]
    [goog.dom :as gdom]
    [reagent.core :as r]
    [reagent.dom :as rdom]
@@ -18,7 +19,7 @@
 
 (defonce state
   (r/atom {:inputs (initial-inputs)
-           :entries {}}))
+           :entries (or (read-string (.getItem (.-localStorage js/window) "entries")) {})}))
 
 (defn date-input []
   (let [val (r/cursor state [:inputs :date])]
@@ -46,7 +47,7 @@
     [:button {:type "submit"} "Submit"]])
 
 (defn submit-form [state]
-  (let [{:keys [date minutes]} (:inputs state)]
+  (let [{:keys [date minutes]} (:inputs state)] 
     (-> state
         (assoc-in [:entries date] (js/parseInt minutes))
         (assoc :inputs (initial-inputs)))))
@@ -55,13 +56,11 @@
   [:form.input-form
    {:on-submit (fn [e]
                  (.preventDefault e)
-                 (swap! state submit-form))}
+                 (swap! state submit-form)
+                 (.setItem (.-localStorage js/window) "entries" (:entries @state)))}
    [date-input]                                           ;; <3>
    [time-input]
    [submit-button]])
-
-(defn- random-point []
-  (js/Math.floor (* (js/Math.random) 100)))
 
 (def chart-width 400)
 (def chart-height 200)
@@ -78,7 +77,7 @@
          (range chart-days))))
 
 (defn chart []
-  (let [entries (r/cursor state [:entries])
+  (let [entries (r/cursor state [:entries]) 
         chart-data (ratom/make-reaction
                     #(let [points (get-points @entries)]
                        {:points points
@@ -111,6 +110,19 @@
   (gdom/getElement "app"))                                 ;; <2>
 
 (comment
-  
+
   @state
+  (.. js/window -localStorage)
+
+  (nil? (.getItem (.-localStorage js/window) "entries2"))
+
+  (get (read-string "{\"2025-05-01\" 10}") "2025-05-01")
+
+  (let [entries (read-string (.getItem (.-localStorage js/window) "entries"))]
+    (nil? entries))
+
+  (.setItem (.-localStorage js/window) "entries" nil)
+
+  (.. js/window -localStorage clear)
+
   )
