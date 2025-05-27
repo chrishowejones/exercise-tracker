@@ -3,7 +3,6 @@
    [cljs.reader :refer [read-string]]
    [goog.dom :as gdom]
    [reagent.core :as r]
-   [reagent.dom :as rdom]
    [reagent.dom.client :as rclient]
    [reagent.ratom :as ratom]))
 
@@ -105,10 +104,6 @@
   [:div.app
     [chart]
     [form]])
-
-#_(rdom/render
-  [app]
-  (gdom/getElement "app"))                                 ;; <2>
 
 (defonce root (rclient/create-root (gdom/getElement "app")))
 
