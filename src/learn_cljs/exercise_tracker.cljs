@@ -1,9 +1,10 @@
-(ns learn-cljs.exercise-tracker
+(ns ^:figwheel-hooks learn-cljs.exercise-tracker
   (:require
    [cljs.reader :refer [read-string]]
    [goog.dom :as gdom]
    [reagent.core :as r]
    [reagent.dom :as rdom]
+   [reagent.dom.client :as rclient]
    [reagent.ratom :as ratom]))
 
 (defn- date-string [d]
@@ -28,7 +29,7 @@
        [:label "Day"]
        [:input {:type "date"
                 :value @val
-                :on-change #(reset! val 
+                :on-change #(reset! val
                                     (.. % -target -value))}]])))
 
 (defn time-input []
@@ -36,7 +37,7 @@
     (fn []
       [:div.input-wrapper
        [:label "Time (minutes)"]
-       [:input {:type "number" 
+       [:input {:type "number"
                 :min 0
                 :step 1
                 :value @val
@@ -47,7 +48,7 @@
     [:button {:type "submit"} "Submit"]])
 
 (defn submit-form [state]
-  (let [{:keys [date minutes]} (:inputs state)] 
+  (let [{:keys [date minutes]} (:inputs state)]
     (-> state
         (assoc-in [:entries date] (js/parseInt minutes))
         (assoc :inputs (initial-inputs)))))
@@ -77,7 +78,7 @@
          (range chart-days))))
 
 (defn chart []
-  (let [entries (r/cursor state [:entries]) 
+  (let [entries (r/cursor state [:entries])
         chart-data (ratom/make-reaction
                     #(let [points (get-points @entries)]
                        {:points points
@@ -105,24 +106,22 @@
     [chart]
     [form]])
 
-(rdom/render
+#_(rdom/render
   [app]
   (gdom/getElement "app"))                                 ;; <2>
+
+(defonce root (rclient/create-root (gdom/getElement "app")))
+
+(defn ^:after-load start []
+  (js/console.log "Start!")
+  (rclient/render root [app]))
+
+(start)
 
 (comment
 
   @state
-  (.. js/window -localStorage)
-
-  (nil? (.getItem (.-localStorage js/window) "entries2"))
-
-  (get (read-string "{\"2025-05-01\" 10}") "2025-05-01")
-
-  (let [entries (read-string (.getItem (.-localStorage js/window) "entries"))]
-    (nil? entries))
-
-  (.setItem (.-localStorage js/window) "entries" nil)
 
   (.. js/window -localStorage clear)
-
+  ;;
   )
